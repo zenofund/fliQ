@@ -90,7 +90,7 @@ function App() {
         <NotificationProvider>
           <TooltipProvider>
             <Toaster />
-            <PWAInstallPrompt />
+            {/* <PWAInstallPrompt /> */}
             <Router />
           </TooltipProvider>
         </NotificationProvider>
