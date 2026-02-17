@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, ShieldCheck, User, Star, Award, ExternalLink } from "lucide-react";
+import { MapPin, ShieldCheck, User, Star, Award } from "lucide-react";
 import blurredProfile from "@/assets/generated_images/blurred_portrait_of_a_person_for_privacy.png";
 import { Link } from "wouter";
 import { motion, useMotionValue, useTransform } from "framer-motion";
@@ -57,6 +57,10 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
 
   const age = dateOfBirth ? differenceInYears(new Date(), new Date(dateOfBirth)) : 25;
 
+  const displayName = name.split(" ").length > 1 
+    ? `${name.split(" ")[0]} ${name.split(" ")[1][0]}.` 
+    : name;
+
   return (
     <motion.div
       ref={ref}
@@ -68,10 +72,9 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
       onDragEnd={(_, info) => {
         if (!isSwipeable) return;
         const threshold = window.innerWidth * 0.3; // 30% of screen width
-        if (info.offset.x > threshold) {
-          onSwipe?.("right");
-        } else if (info.offset.x < -threshold) {
-          onSwipe?.("left");
+        if (Math.abs(info.offset.x) > threshold) {
+           // Both directions are now treated as "next"
+           onSwipe?.(info.offset.x > 0 ? "right" : "left");
         } else {
           x.set(0);
         }
@@ -90,18 +93,17 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
             <>
               <motion.div 
                 style={{ opacity: viewProfileOpacity, scale: viewProfileScale }}
-                className="absolute top-12 right-12 z-20 border-4 border-white rounded-[5px] px-6 py-3 rotate-12 bg-black/40 backdrop-blur-xl"
+                className="absolute top-12 right-12 z-20 border-4 border-white/50 rounded-[5px] px-6 py-3 rotate-12 bg-black/40 backdrop-blur-xl"
               >
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl font-black text-white uppercase tracking-tighter">View</span>
-                  <ExternalLink className="w-10 h-10 text-white mt-1" />
+                  <span className="text-3xl font-black text-white uppercase tracking-tighter">Next</span>
                 </div>
               </motion.div>
               <motion.div 
                 style={{ opacity: passOpacity, scale: passScale }}
-                className="absolute top-12 left-12 z-20 border-4 border-red-500 rounded-[5px] px-6 py-3 -rotate-12 bg-black/40 backdrop-blur-xl"
+                className="absolute top-12 left-12 z-20 border-4 border-white/50 rounded-[5px] px-6 py-3 -rotate-12 bg-black/40 backdrop-blur-xl"
               >
-                <span className="text-4xl font-black text-red-500 uppercase tracking-tighter">Pass</span>
+                <span className="text-3xl font-black text-white uppercase tracking-tighter">Next</span>
               </motion.div>
             </>
           )}
@@ -144,7 +146,7 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
           <div className="absolute bottom-0 left-0 right-0 p-5 space-y-3">
              <div className="flex justify-between items-end">
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">{name}</h3>
+                  <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">{displayName}</h3>
                   <div className="flex flex-col gap-1.5 mt-2">
                     <div className="flex items-center text-xs md:text-sm text-white/80 font-medium">
                       <MapPin className="w-3.5 h-3.5 mr-1.5 text-white/60" />
