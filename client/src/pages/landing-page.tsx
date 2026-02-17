@@ -10,7 +10,6 @@ import { Escort } from "@shared/schema";
 import { AnimatePresence } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { LayoutGrid, Layers } from "lucide-react";
-import { useLocation } from "wouter";
 import {
   Command,
   CommandEmpty,
@@ -35,7 +34,6 @@ import { cn, calculateDistance } from "@/lib/utils";
 
 export default function LandingPage() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
@@ -174,7 +172,7 @@ export default function LandingPage() {
       isVerified: !!e.isVerified,
       status: (e as any).isBusy ? "busy" as const : (e.availability ? "available" as const : "busy" as const),
       bio: e.bio,
-      dateOfBirth: e.dateOfBirth,
+      dateOfBirth: e.dateOfBirth || undefined,
       avatar: e.avatar,
       averageRating: e.averageRating,
       reviewCount: e.reviewCount,
@@ -183,14 +181,10 @@ export default function LandingPage() {
   }), [filteredEscorts, coords]);
 
   const handleSwipe = (direction: "left" | "right", escortId?: string) => {
-    if (direction === "left" && escortId) {
-      setLocation(`/profile/${escortId}`);
-      return;
-    }
-
+    // Both directions now just move to the next profile
     toast({
-      title: "Passed",
-      description: "Showing next profile",
+      title: "Next Profile",
+      description: "Showing next recommendation",
       duration: 1000,
     });
     
