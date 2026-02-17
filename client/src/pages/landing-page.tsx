@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Escort } from "@shared/schema";
 import { AnimatePresence } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
-import { LayoutGrid, Layers, ChevronRight } from "lucide-react";
+import { LayoutGrid, Layers } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Command,
@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, calculateDistance } from "@/lib/utils";
 
 export default function LandingPage() {
   const { toast } = useToast();
@@ -156,7 +156,7 @@ export default function LandingPage() {
     return true;
   });
 
-  const enhancedEscorts = filteredEscorts?.map(e => {
+  const enhancedEscorts = useMemo(() => filteredEscorts?.map(e => {
     let distanceStr = "Distance unknown";
     if (coords && e.latitude && e.longitude) {
       const dist = calculateDistance(coords.lat, coords.lng, Number(e.latitude), Number(e.longitude));
@@ -180,7 +180,7 @@ export default function LandingPage() {
       reviewCount: e.reviewCount,
       badges: (e.badges as string[]) || [],
     };
-  });
+  }), [filteredEscorts, coords]);
 
   function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
@@ -402,16 +402,16 @@ export default function LandingPage() {
         </div>
       ) : swipeMode ? (
         <div className="flex flex-col items-center">
-          <div className="relative w-full max-w-md mx-auto aspect-[4/6.5] md:aspect-[4/6] mt-0 md:mt-4 mb-8">
-            <AnimatePresence mode="popLayout">
-            {enhancedEscorts && currentIndex < enhancedEscorts.length ? (
+           <div className="relative w-[calc(100%+2rem)] -mx-4 h-[100dvh] md:w-full md:max-w-md md:mx-auto md:h-auto md:aspect-[4/6] mt-0 md:mt-4 mb-0">
+             <AnimatePresence mode="popLayout">
+             {enhancedEscorts && currentIndex < enhancedEscorts.length ? (
               enhancedEscorts.slice(currentIndex, currentIndex + 3).reverse().map((escort, index, array) => {
                 const isTop = index === array.length - 1;
                 return (
                   <EscortCard 
                     key={escort.id} 
                     {...escort} 
-                    isSwipeable={isTop}
+                    isSwipeable={true}
                     onSwipe={isTop ? (dir) => handleSwipe(dir, escort.id) : undefined}
                   />
                 );
@@ -440,32 +440,6 @@ export default function LandingPage() {
               </div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Mobile Swipe Controls - Only visible on mobile in swipe mode */}
-        <div className="flex md:hidden flex-col items-center gap-6 w-full max-w-md px-4 pb-12">
-          <div className="flex items-center justify-center gap-8 w-full">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="rounded-full w-16 h-16 border-white/10 bg-white/5 text-white hover:bg-white/10 shadow-xl"
-              onClick={() => handleSwipe("right")}
-            >
-              <X className="w-8 h-8" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="rounded-full w-16 h-16 border-white/10 bg-white/5 text-white hover:bg-white/10 shadow-xl"
-              onClick={() => {
-                const currentEscort = enhancedEscorts?.[currentIndex];
-                if (currentEscort) handleSwipe("left", currentEscort.id);
-              }}
-            >
-              <ChevronRight className="w-8 h-8" />
-            </Button>
-          </div>
         </div>
       </div>
       ) : (

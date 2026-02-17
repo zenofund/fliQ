@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Escort, Review } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { cn } from "@/lib/utils";
+import { cn, calculateDistance } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EngagementModal } from "@/components/engagement-modal";
 import { 
@@ -44,6 +44,7 @@ export default function EscortProfile() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [api, setApi] = useState<CarouselApi>();
+  const [userCoords, setUserCoords] = useState<{lat: number, lng: number} | null>(null);
   
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -127,6 +128,29 @@ export default function EscortProfile() {
   });
 
   useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCoords({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log("Location access denied or error in profile", error);
+        }
+      );
+    }
+  }, []);
+
+  const distance = useMemo(() => {
+    if (userCoords && escort?.latitude && escort?.longitude) {
+       return calculateDistance(userCoords.lat, userCoords.lng, Number(escort.latitude), Number(escort.longitude)).toFixed(1);
+    }
+    return "Unknown";
+  }, [userCoords, escort]);
+
+  useEffect(() => {
     if (escort?.hourlyRate) {
       setAmount(Number(escort.hourlyRate));
     }
@@ -136,10 +160,7 @@ export default function EscortProfile() {
   if (!escort) return <div className="text-center py-20 text-white">Escort not found</div>;
 
   const age = escort.dateOfBirth ? differenceInYears(new Date(), new Date(escort.dateOfBirth)) : 25;
-  
-  // Real proximity calculation if location permission was granted in landing page or stored in user profile
-  // For now, we'll keep a more realistic mock or try to get coordinates from sessionStorage if we stored them
-  const distance = (Math.random() * 5 + 1).toFixed(1); 
+
   const baseRate = Number(escort.hourlyRate || 25000);
 
   const handleRequestBooking = () => {
