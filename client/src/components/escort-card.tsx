@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 
 import { differenceInYears } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface EscortCardProps {
   id: string;
@@ -24,6 +25,7 @@ interface EscortCardProps {
   badges?: string[];
   onSwipe?: (direction: "left" | "right") => void;
   isSwipeable?: boolean;
+  className?: string;
 }
 
 export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({ 
@@ -40,7 +42,8 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
   reviewCount = 0,
   badges = [],
   onSwipe,
-  isSwipeable = false
+  isSwipeable = false,
+  className
 }, ref) => {
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, 0, 200], [0, 1, 0]);
@@ -73,10 +76,10 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
           x.set(0);
         }
       }}
-      className={isSwipeable ? "absolute inset-0 touch-none select-none" : "touch-none"}
+      className={cn(isSwipeable ? "absolute inset-0 touch-none select-none" : "touch-none", className)}
     >
-      <Card className={`overflow-hidden border-white/5 bg-[#0A0A0A] hover:bg-card/80 transition-all duration-300 group hover:border-white/10 shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[5px] h-full ${isSwipeable ? 'shadow-2xl' : ''}`}>
-        <div className="relative aspect-[4/5] overflow-hidden bg-secondary/30">
+      <Card className={`overflow-hidden border-white/5 bg-[#0A0A0A] hover:bg-card/80 transition-all duration-300 group hover:border-white/10 shadow-xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] h-full ${isSwipeable ? 'shadow-none rounded-none border-0 flex flex-col' : 'rounded-[5px] shadow-2xl'}`}>
+        <div className={`relative overflow-hidden bg-secondary/30 ${isSwipeable ? 'flex-1' : 'aspect-[4/5]'}`}>
           <img 
             src={avatar || blurredProfile} 
             alt="Profile (Blurred)" 
