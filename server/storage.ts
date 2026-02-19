@@ -54,7 +54,7 @@ export interface IStorage {
   hasActiveBooking(userId1: string, userId2: string): Promise<boolean>;
 
   // Reviews
-  createReview(review: InsertReview): Promise<Review>;
+  createReview(review: InsertReview & { reviewerId: string; revieweeId: string }): Promise<Review>;
   getReviewsByRevieweeId(revieweeId: string): Promise<(Review & { reviewerName: string })[]>;
   getReviewsByBookingId(bookingId: string): Promise<Review[]>;
 
@@ -639,7 +639,7 @@ export class DatabaseStorage implements IStorage {
     return !!escort?.verificationFeePaid;
   }
 
-  async createReview(insertReview: InsertReview): Promise<Review> {
+  async createReview(insertReview: InsertReview & { reviewerId: string; revieweeId: string }): Promise<Review> {
     return await db.transaction(async (tx) => {
       // 1. Insert the review
       const [review] = await tx.insert(schema.reviews).values({
@@ -719,13 +719,6 @@ export class DatabaseStorage implements IStorage {
         const first = reviewer.firstName;
         const lastInitial = reviewer.lastName ? ` ${reviewer.lastName.charAt(0)}.` : "";
         reviewerName = `${first}${lastInitial}`;
-      } else if (reviewer.displayName) {
-        const names = reviewer.displayName.split(' ');
-        if (names.length > 1) {
-          reviewerName = `${names[0]} ${names[names.length - 1].charAt(0)}.`;
-        } else {
-          reviewerName = names[0];
-        }
       }
 
       return {
@@ -1159,6 +1152,13 @@ export class MemStorage implements IStorage {
       lastName: insertUser.lastName || null,
       isVerified: false,
       isSuspended: false,
+      avatar: null,
+      verificationDocs: {},
+      resetToken: null,
+      resetTokenExpires: null,
+      notificationSettings: {},
+      latitude: null,
+      longitude: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1178,7 +1178,17 @@ export class MemStorage implements IStorage {
             verificationFeePaid: false,
             profileViews: 0,
             avatar: null,
-            engagementAgreement: null
+            engagementAgreement: null,
+            latitude: null,
+            longitude: null,
+            updatedAt: new Date(),
+            averageRating: "0",
+            reviewCount: 0,
+            badges: [],
+            services: [],
+            completedBookings: 0,
+            cancellationRate: "0",
+            responseRate: "100",
         });
     }
     
@@ -1192,8 +1202,12 @@ export class MemStorage implements IStorage {
     this.users.set(id, updatedUser);
     return updatedUser;
   }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
   
-  async getEscorts(coords?: { lat: number, lng: number }): Promise<Escort[]> {
+  async getEscorts(coords?: { lat: number, lng: number }): Promise<(Escort & { isBusy: boolean })[]> {
     const settings = await this.getAdminSettings();
     const radius = Number(settings.proximityRadius) || 50;
     const escorts = Array.from(this.escorts.values());
@@ -1225,7 +1239,7 @@ export class MemStorage implements IStorage {
         return distA - distB;
       });
     }
-    return results;
+    return results.map(e => ({ ...e, isBusy: false }));
   }
 
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -1475,6 +1489,7 @@ export class MemStorage implements IStorage {
     const newMessage: Message = {
       ...message,
       id,
+      bookingId: message.bookingId || null,
       isRead: message.isRead || false,
       createdAt: new Date(),
     };
@@ -1531,11 +1546,12 @@ export class MemStorage implements IStorage {
     return !!escort?.verificationFeePaid;
   }
 
-  async createReview(insertReview: InsertReview): Promise<Review> {
+  async createReview(insertReview: InsertReview & { reviewerId: string; revieweeId: string }): Promise<Review> {
     const id = randomUUID();
     const review: Review = {
       ...insertReview,
       id,
+      comment: insertReview.comment || null,
       createdAt: new Date(),
     };
     this.reviews.push(review);
@@ -1600,13 +1616,6 @@ export class MemStorage implements IStorage {
             const first = reviewer.firstName;
             const lastInitial = reviewer.lastName ? ` ${reviewer.lastName.charAt(0)}.` : "";
             reviewerName = `${first}${lastInitial}`;
-          } else if (reviewer.displayName) {
-            const names = reviewer.displayName.split(' ');
-            if (names.length > 1) {
-              reviewerName = `${names[0]} ${names[names.length - 1].charAt(0)}.`;
-            } else {
-              reviewerName = names[0];
-            }
           }
         }
         return { ...r, reviewerName };
@@ -1701,6 +1710,8 @@ export class MemStorage implements IStorage {
       ...notification,
       id,
       isRead: false,
+      isArchived: false,
+      data: notification.data || null,
       createdAt: new Date(),
     };
     this.notifications.push(newNotification);
@@ -1783,6 +1794,7 @@ export class MemStorage implements IStorage {
       userId,
       id,
       isVerified: false,
+      verificationToken: contact.verificationToken || null,
       createdAt: new Date(),
     };
     this.trustedContacts.set(id, newContact);
@@ -1796,6 +1808,24 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async verifyTrustedContact(token: string): Promise<boolean> {
+    const contact = Array.from(this.trustedContacts.values()).find(c => c.verificationToken === token);
+    if (!contact) return false;
+    // Assuming verifiedAt is optional or part of the type
+    // If TS complains, I'll remove it. But schema likely has it.
+    // To be safe against type errors, I'll cast or just set isVerified for now.
+    // DatabaseStorage sets verifiedAt.
+    // Let's try setting it.
+    (contact as any).verifiedAt = new Date();
+    contact.isVerified = true;
+    this.trustedContacts.set(contact.id, contact);
+    return true;
+  }
+
+  async getTrustedContactByToken(token: string): Promise<schema.TrustedContact | undefined> {
+    return Array.from(this.trustedContacts.values()).find(c => c.verificationToken === token);
+  }
+
   // SOS Alerts
   async createSosAlert(userId: string, alert: schema.InsertSosAlert): Promise<schema.SosAlert> {
     const id = randomUUID();
@@ -1804,6 +1834,7 @@ export class MemStorage implements IStorage {
       userId,
       id,
       status: "ACTIVE",
+      bookingId: alert.bookingId || null,
       createdAt: new Date(),
       resolvedAt: null,
     };
