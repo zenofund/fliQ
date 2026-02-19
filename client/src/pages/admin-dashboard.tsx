@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -428,15 +427,15 @@ export default function AdminDashboard() {
                                     View Details
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-4xl w-full h-full sm:h-auto sm:max-h-[90vh] bg-card border-white/10 text-white flex flex-col p-0 overflow-hidden">
-                                  <DialogHeader className="p-4 sm:p-6 border-b border-white/10">
+                                <DialogContent className="sm:max-w-4xl w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] bg-card border-white/10 text-white flex flex-col p-0 overflow-hidden">
+                                  <DialogHeader className="p-4 sm:p-6 border-b border-white/10 shrink-0">
                                     <DialogTitle>Verification Review</DialogTitle>
                                     <DialogDescription className="text-muted-foreground text-sm">
                                       Review documentation for {v.user.firstName} {v.user.lastName} ({v.role})
                                     </DialogDescription>
                                   </DialogHeader>
                                   
-                                  <ScrollArea className="flex-1 px-4 sm:px-6">
+                                  <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 sleek-scroll">
                                     {isRejecting ? (
                                       <div className="py-8 max-w-md mx-auto space-y-4">
                                         <div className="flex items-center gap-3 text-red-400 mb-2">
@@ -540,9 +539,9 @@ export default function AdminDashboard() {
                                         </div>
                                       </div>
                                     )}
-                                  </ScrollArea>
+                                  </div>
 
-                                  <DialogFooter className="flex-row gap-3 p-4 sm:p-6 border-t border-white/10 bg-card/80 backdrop-blur-sm">
+                                  <DialogFooter className="flex-row gap-3 p-4 sm:p-6 border-t border-white/10 bg-card/80 backdrop-blur-sm shrink-0">
                                     {isRejecting ? (
                                       <>
                                         <Button 

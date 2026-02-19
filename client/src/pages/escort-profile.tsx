@@ -51,11 +51,11 @@ export default function EscortProfile() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
   
-  const isUploadedImage = (url?: string | null) => url?.startsWith('/uploads/');
+  // const isUploadedImage = (url?: string | null) => url?.startsWith('/uploads/');
   
-  const { data: escort, isLoading } = useQuery<Escort>({
-      queryKey: [`/api/escorts/${id}`],
-      enabled: !!id
+  const { data: escort, isLoading } = useQuery<Escort & { firstName?: string; lastName?: string }>({
+    queryKey: [`/api/escorts/${id}`],
+    enabled: !!id
   });
 
   const { data: reviews, isLoading: isLoadingReviews } = useQuery<Review[]>({
@@ -91,7 +91,7 @@ export default function EscortProfile() {
   }, [isLightboxOpen, currentPhotoIndex, allPhotos]);
 
   const openLightbox = (index: number) => {
-    if (!isAuthenticated && isUploadedImage(escort?.gallery?.[index] || escort?.avatar)) {
+    if (!isAuthenticated) {
       toast({
         title: "Privacy Protection",
         description: "Please login to view full photos.",
@@ -249,14 +249,14 @@ export default function EscortProfile() {
               <img 
                 src={escort.avatar} 
                 alt="Profile" 
-                className={`w-full h-full object-cover md:object-top transition-all duration-700 ${(!isAuthenticated && isUploadedImage(escort.avatar)) ? 'blur-[12px] opacity-80' : 'blur-0 opacity-100'}`} 
+                className={`w-full h-full object-cover md:object-top transition-all duration-700 ${!isAuthenticated ? 'blur-[12px] opacity-80' : 'blur-0 opacity-100'}`} 
               />
             ) : (
               <div className={`w-full h-full flex items-center justify-center bg-secondary/50`}>
                 <UserIcon className="w-20 h-20 text-muted-foreground/30" />
               </div>
             )}
-            {!isAuthenticated && isUploadedImage(escort.avatar) && (
+            {!isAuthenticated && escort.avatar && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/40 backdrop-blur-sm">
                 <LockIcon className="w-8 h-8 text-white/60 mb-3" />
                 <p className="text-sm font-semibold text-white">Login to view clear photos</p>
@@ -266,7 +266,9 @@ export default function EscortProfile() {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
               <div className="flex items-center gap-2 mb-1 md:mb-2">
-                 <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">{escort.displayName}</h1>
+                 <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
+                   {escort.firstName ? `${escort.firstName} ${escort.lastName || ''}` : escort.displayName}
+                 </h1>
                  <div className="flex flex-wrap gap-1 items-center">
                    {escort.trustLevel !== "BRONZE" && (
                       <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 backdrop-blur-md gap-1 px-2 py-0.5 text-[10px] md:text-xs">
@@ -334,7 +336,7 @@ export default function EscortProfile() {
                         <img 
                           src={img} 
                           alt={`Gallery ${idx + 1}`} 
-                          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${(!isAuthenticated && isUploadedImage(img)) ? 'blur-[8px] opacity-70' : 'blur-0 opacity-100'}`} 
+                          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${!isAuthenticated ? 'blur-[8px] opacity-70' : 'blur-0 opacity-100'}`} 
                         />
                      </div>
                    ))
