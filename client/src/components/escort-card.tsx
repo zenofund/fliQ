@@ -71,7 +71,7 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
       whileDrag={isSwipeable ? { scale: 1.02, cursor: "grabbing" } : {}}
       onDragEnd={(_, info) => {
         if (!isSwipeable) return;
-        const threshold = window.innerWidth * 0.3; // 30% of screen width
+        const threshold = window.innerWidth * 0.15; // 15% of screen width (Increased sensitivity)
         if (Math.abs(info.offset.x) > threshold) {
            // Both directions are now treated as "next"
            onSwipe?.(info.offset.x > 0 ? "right" : "left");
