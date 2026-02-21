@@ -386,7 +386,7 @@ export default function LandingPage() {
       ) : swipeMode ? (
         <div className="flex flex-col items-center">
           {/* Mobile Location Pill */}
-          <div className="md:hidden flex justify-center mb-4 px-4 z-30 relative w-full mt-2">
+          <div className="md:hidden flex justify-center mb-4 px-4 z-30 relative w-full mt-2 h-[40px]">
             <Popover open={mobileOpen} onOpenChange={setMobileOpen}>
               <PopoverTrigger asChild>
                 <div className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full shadow-lg cursor-pointer animate-in fade-in slide-in-from-top-4 duration-700">
@@ -448,7 +448,7 @@ export default function LandingPage() {
             </Popover>
           </div>
 
-           <div className="relative w-[calc(100%+2rem)] -mx-4 h-[100dvh] md:w-full md:max-w-md md:mx-auto md:h-auto md:aspect-[4/6] mt-0 md:mt-4 mb-0">
+           <div className="relative w-[calc(100%+2rem)] -mx-4 h-[calc(100dvh-120px)] md:w-full md:max-w-md md:mx-auto md:h-auto md:aspect-[4/6] mt-0 md:mt-4 mb-0">
              <AnimatePresence mode="popLayout">
              {enhancedEscorts && currentIndex < enhancedEscorts.length ? (
               enhancedEscorts.slice(currentIndex, currentIndex + 3).reverse().map((escort, index, array) => {
