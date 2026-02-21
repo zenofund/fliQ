@@ -189,10 +189,8 @@ export default function LandingPage() {
       duration: 1000,
     });
     
-    // Move to next card
-    setTimeout(() => {
-      setCurrentIndex(prev => prev + 1);
-    }, 200);
+    // Move to next card immediately
+    setCurrentIndex(prev => prev + 1);
   };
 
   return (
