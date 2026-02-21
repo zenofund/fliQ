@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, ShieldCheck, User, Star, Award } from "lucide-react";
 import blurredProfile from "@/assets/generated_images/blurred_portrait_of_a_person_for_privacy.png";
 import { Link } from "wouter";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
 import { differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -73,10 +73,17 @@ export const EscortCard = forwardRef<HTMLDivElement, EscortCardProps>(({
         if (!isSwipeable) return;
         const threshold = window.innerWidth * 0.15; // 15% of screen width (Increased sensitivity)
         if (Math.abs(info.offset.x) > threshold) {
-           // Both directions are now treated as "next"
-           onSwipe?.(info.offset.x > 0 ? "right" : "left");
+           // Determine direction and target
+           const direction = info.offset.x > 0 ? "right" : "left";
+           const targetX = direction === "right" ? window.innerWidth + 200 : -window.innerWidth - 200;
+           
+           // Animate off screen gracefully
+           animate(x, targetX, { duration: 0.2, ease: "easeOut" }).then(() => {
+             onSwipe?.(direction);
+           });
         } else {
-          x.set(0);
+          // Spring back to center if swipe canceled
+          animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
         }
       }}
       className={cn(isSwipeable ? "absolute inset-0 touch-none select-none" : "touch-none", className)}
