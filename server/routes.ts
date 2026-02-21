@@ -1895,14 +1895,11 @@ export async function registerRoutes(
         const userId = req.user.id;
 
         if (settings.requirePartnerApproval) {
-          // If approval required, just mark fee paid and set status to PENDING
-          const escort = await storage.getEscortById(userId);
-          const currentDocs = (escort?.verificationDocs as any) || {};
+          // If approval required, just mark fee paid.
           await storage.updateEscort(userId, { 
-            verificationFeePaid: true,
-            verificationDocs: { ...currentDocs, status: "PENDING" }
+            verificationFeePaid: true
           });
-          console.log(`Escort ${userId} paid verification fee. Status set to PENDING (Approval Required).`);
+          console.log(`Escort ${userId} paid verification fee. Waiting for document submission.`);
         } else {
           // Auto-verify if no approval required
           await storage.updateEscort(userId, { verificationFeePaid: true });
