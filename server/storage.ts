@@ -28,6 +28,7 @@ export interface IStorage {
   createBooking(booking: any): Promise<Booking>; 
   updateBooking(id: string, partial: Partial<Booking>): Promise<Booking>;
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
+  getAllBookings(): Promise<Booking[]>;
   
   // Payouts
   getPayout(id: string): Promise<Payout | undefined>;
@@ -443,6 +444,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(schema.bookings.id, id))
       .returning();
     return updated;
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    return await db.select().from(schema.bookings);
   }
 
   async createPayout(payoutData: any): Promise<Payout> {
@@ -1400,6 +1405,10 @@ export class MemStorage implements IStorage {
       
       this.bookings.set(id, updatedBooking);
       return updatedBooking;
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+      return Array.from(this.bookings.values());
   }
 
   async createPayout(payoutData: any): Promise<Payout> {
